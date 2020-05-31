@@ -12,7 +12,6 @@ def query_property_labels(properties, lang="en"):
   SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],%s". }
 }''' % (" ".join(map(lambda p: 'wd:'+p, properties)), lang)
 
-    print(query)
     url = 'https://query.wikidata.org/bigdata/namespace/wdq/sparql'
     data = requests.get(url, params={'query': query, 'format': 'json'}).json()
     response = {} 
@@ -37,6 +36,7 @@ def query_properties(subject):
 @app.route('/')
 def get_missing_attributes():
 
+
     #handle n parameter
     n = request.args.get('n')
     if n:
@@ -46,7 +46,6 @@ def get_missing_attributes():
             return 'N is not a valid integer.', 404
     else:
         n = 10
-
 
 
     #handle subject parameter
@@ -72,6 +71,7 @@ def get_missing_attributes():
     else:
         return 'Please provide "subject" as GET parameter in the form "Q42".', 404
 
+
     #handle lang parameter
     lang = request.args.get('lang')
     if not lang:
@@ -81,5 +81,6 @@ def get_missing_attributes():
 
     for p in response['missing_properties']:
         p['label'] = property_labels[p['property']]
-    
+   
+
     return json.dumps(response, indent=4), 200, {'content-type':'application/json'}
