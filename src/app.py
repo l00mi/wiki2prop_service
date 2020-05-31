@@ -4,12 +4,7 @@ import pandas as pd
 
 PRED_MODEL = 'prediction_ranked_Wiki2Prop_EN_year2018_embedding300LG_.h5'
 
-def page_not_found(e):
-  return render_template('404.html'), 404
-
 app = Flask(__name__)
-app.register_error_handler(404, page_not_found)
-
 
 def query_property_labels(properties, lang="en"):
     query = '''SELECT ?p ?pLabel WHERE {
@@ -88,8 +83,11 @@ def get_missing_attributes():
     for p in response['missing_properties']:
         p['label'] = property_labels[p['property']]
    
+    callback = request.args.get('callback', False)
+    if callback:
+        return str(callback) + '(' + json.dumps(response, indent=4)+ ')' , 200, {'content-type':'application/javascript'}
 
     if request.accept_mimetypes.find('text/html') != -1:
         return render_template("index.html", content=response)
     else:
-        return json.dumps(response, indent=4), 200, {'content-type':'application/json'}
+      	return json.dumps(response, indent=4), 200, {'content-type':'application/json'}
