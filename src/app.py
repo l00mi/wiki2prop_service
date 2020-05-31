@@ -1,10 +1,15 @@
-from flask import Flask, request, json
+from flask import Flask, render_template, request, json
 import requests
 import pandas as pd
 
 PRED_MODEL = 'prediction_ranked_Wiki2Prop_EN_year2018_embedding300LG_.h5'
 
+def page_not_found(e):
+  return render_template('404.html'), 404
+
 app = Flask(__name__)
+app.register_error_handler(404, page_not_found)
+
 
 def query_property_labels(properties, lang="en"):
     query = '''SELECT ?p ?pLabel WHERE {
@@ -43,7 +48,7 @@ def get_missing_attributes():
         try:
             n=int(n)
         except:
-            return 'N is not a valid integer.', 404
+            return render_template("404.html", error='N is not a valid integer.'), 404
     else:
         n = 10
 
@@ -51,12 +56,13 @@ def get_missing_attributes():
     #handle subject parameter
     subject = request.args.get('subject')
 
-    response = { "missing_properties" : [] }
-    if subject and subject[0] == 'Q':
+    if subject:
         try:
             subject=str(int(subject[1:]))
         except:
-            return 'Subject not a valid integer.', 404
+            return render_template("404.html", error='Subject is not a valid Entity in the form "Q42".'), 404
+
+        response = { "subject": "Q"+subject, "missing_properties" : [] }
 
         prediction = pd.read_hdf(PRED_MODEL,'df',where='index='+subject)
         if prediction.shape[0]:
@@ -67,9 +73,9 @@ def get_missing_attributes():
                     "predicted": "{:.2%}".format(prediction.iloc[0][P])
                     } )
         else:
-            return 'Entity not found in index.', 404
+            return render_template("404.html", error='Entity not found in index.'), 404
     else:
-        return 'Please provide "subject" as GET parameter in the form "Q42".', 404
+        return render_template("index.html")
 
 
     #handle lang parameter
@@ -83,4 +89,7 @@ def get_missing_attributes():
         p['label'] = property_labels[p['property']]
    
 
-    return json.dumps(response, indent=4), 200, {'content-type':'application/json'}
+    if request.accept_mimetypes.find('text/html') != -1:
+        return render_template("index.html", content=response)
+    else:
+        return json.dumps(response, indent=4), 200, {'content-type':'application/json'}

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}wiki2prop{% endblock %}
+
+{% block subtitle %}
+	{% if content is defined %}
+	Missing Properties for <a href="https://www.wikidata.org/wiki/{{content.subject}}">{{content.subject}}</a>
+        {% endif %}
+{% endblock %}
+
+{% block body %}
+      <form action="/">
+	      <div class="field">
+		<label class="label">Entity Subject</label>
+		<input id="subject" name="subject" class="input is-rounded" type="text" placeholder="Q42">
+	      </div>
+      </form>
+      {% if content is defined %}
+      <table class="table">
+	<thead>
+		<tr>
+			<th><abbr title="Property">P</abbr></th>
+			<th>Probability</th>
+			<th>Label</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for p in content.missing_properties %}
+		<tr>
+			<th><a href="https://www.wikidata.org/wiki/Property:{{p.property}}">{{p.property}}</a></th>
+			<td>{{p.predicted}}</td>
+			<td>{{p.label}}</td>
+		</tr>
+		{% endfor %}
+	</tbody>
+      </table>
+      {% endif %}
+{% endblock %}
