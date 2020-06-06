@@ -36,17 +36,29 @@ def query_properties(subject):
 @app.route('/')
 def get_missing_attributes():
 
-
     #handle n parameter
     n = request.args.get('n')
     if n:
         try:
             n=int(n)
         except:
-            return render_template("404.html", error='N is not a valid integer.'), 404
+            return render_template("index.html", error='N is not a valid integer.'), 404
     else:
         n = 10
 
+
+    #handle lang parameter
+    lang = request.args.get('lang')
+    if not lang:
+        lang = request.accept_languages.best[:2]
+    if not lang:
+        lang = 'en'
+
+    response = { 'lang': lang }
+
+    title = request.args.get('title')
+    if title:
+        response['title'] = title
 
     #handle subject parameter
     subject = request.args.get('subject')
@@ -55,9 +67,10 @@ def get_missing_attributes():
         try:
             subject=str(int(subject[1:]))
         except:
-            return render_template("404.html", error='Subject is not a valid Entity in the form "Q42".'), 404
+            return render_template("index.html", content=response, error='Subject is not a valid Entity in the form "Q42".'), 404
 
-        response = { "subject": "Q"+subject, "missing_properties" : [] }
+        response['subject'] =  "Q"+subject
+        response['missing_properties'] = []
 
         prediction = pd.read_hdf(PRED_MODEL,'df',where='index='+subject)
         if prediction.shape[0]:
@@ -68,15 +81,9 @@ def get_missing_attributes():
                     "predicted": "{:.2%}".format(prediction.iloc[0][P])
                     } )
         else:
-            return render_template("404.html", error='Entity not found in index.'), 404
+            return render_template("index.html", content=response, error='Entity not found in index.'), 404
     else:
-        return render_template("index.html")
-
-
-    #handle lang parameter
-    lang = request.args.get('lang')
-    if not lang:
-        lang = 'en'
+        return render_template("index.html", content=response)
 
     property_labels = query_property_labels(map(lambda p: p["property"], response['missing_properties']), lang=lang)
 
