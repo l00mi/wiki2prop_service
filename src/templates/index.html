@@ -4,35 +4,56 @@
   <section class="section">
     <div class="container">
       <form>
-	      <div class="field">
-		<label class="label">Entity Subject</label>
-		<input id="subject" name="subject" class="input is-rounded" type="text" placeholder="Q42">
-	      </div>
+        <div class="dropdown">
+           <div class="dropdown-trigger">
+              <label class="label">Entity Subject</label>
+              <input id="subject" name="subject" class="input is-rounded" type="text" aria-haspopup="true" aria-controls="menu" placeholder="Johnny Depp">
+          </div>
+          <div class="dropdown-menu" id="menu" role="menu" />
+          </div>
       </form>
     </div>
   </section>
+  <script>
+     var api = function(inputValue) {
+       return fetch('https://www.wikidata.org/w/api.php?format=json&origin=*&action=wbsearchentities&language=en&limit=20&type=item&search='+inputValue).then(function(resp) {
+        return resp.json()
+      }).then(function(resp) {
+        return resp.search.map(function(subject) {
+          return {label: subject.label, description: subject.description, value: subject.id}
+        })
+      })
+    }
+
+    var onSelect = function(state) {
+      window.location.href = '?subject='+state.value;
+    }
+    bulmahead('subject', 'menu', api, onSelect);
+
+  </script>
+
 
 {% if content is defined %}
   <section class="section">
     <div class="container">
       <p class="subtitle">Missing Properties for <a href="https://www.wikidata.org/wiki/{{content.subject}}">{{content.subject}}</a></p>
       <table class="table">
-	<thead>
-		<tr>
-			<th><abbr title="Property">P</abbr></th>
-			<th>Probability</th>
-			<th>Label</th>
-		</tr>
-	</thead>
-	<tbody>
-		{% for p in content.missing_properties %}
-		<tr>
-			<th><a href="https://www.wikidata.org/wiki/Property:{{p.property}}">{{p.property}}</a></th>
-			<td>{{p.predicted}}</td>
-			<td>{{p.label}}</td>
-		</tr>
-		{% endfor %}
-	</tbody>
+  <thead>
+    <tr>
+      <th><abbr title="Property">P</abbr></th>
+      <th>Probability</th>
+      <th>Label</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for p in content.missing_properties %}
+    <tr>
+      <th><a href="https://www.wikidata.org/wiki/Property:{{p.property}}">{{p.property}}</a></th>
+      <td>{{p.predicted}}</td>
+      <td>{{p.label}}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
       </table>
     </div>
   </section>
