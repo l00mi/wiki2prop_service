@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, json
 import requests
 import pandas as pd
 
-PRED_MODEL = 'prediction_ranked_Wiki2Prop_EN_year2018_embedding300LG_.h5'
+PRED_MODEL = '../../../prediction_ranked_Wiki2PropDEPLOY_year2018_embedding300LG_DEPLOY.h5'
 
 app = Flask(__name__)
 
