@@ -44,7 +44,7 @@
     }
 
     var onSelect = function(state) {
-	    window.location.href = '?lang={{content.lang}}&subject='+state.value+'&title='+state.label;
+	    window.location.href = '?lang={{content.lang}}&subject='+state.value+'&present=true&title='+state.label;
     }
     bulmahead('subject', 'menu', api, onSelect);
 
@@ -65,7 +65,7 @@
   </thead>
   <tbody>
     {% for p in content.missing_properties %}
-    <tr>
+    <tr {% if p.present %}class="is-selected"{% endif %}>
       <th><a href="https://www.wikidata.org/wiki/Property:{{p.property}}">{{p.property}}</a></th>
       <td>{{p.predicted}}</td>
       <td>{{p.label}}</td>

@@ -4,6 +4,7 @@ import pandas as pd
 
 PRED_MODEL = '../../../prediction_ranked_Wiki2PropDEPLOY_year2018_embedding300LG_DEPLOY.h5'
 
+
 app = Flask(__name__)
 
 def query_property_labels(properties, lang="en"):
@@ -62,6 +63,7 @@ def get_missing_attributes():
 
     #handle subject parameter
     subject = request.args.get('subject')
+    present = request.args.get('present')
 
     if subject:
         try:
@@ -75,11 +77,21 @@ def get_missing_attributes():
         prediction = pd.read_hdf(PRED_MODEL,'df',where='index='+subject)
         if prediction.shape[0]:
             existing = query_properties(subject)
-            for P in prediction[prediction.columns.difference(existing)].sort_values(by=prediction.index[0] , axis=1, ascending=False).iloc[:,0:n]:
-                response['missing_properties'].append( {
-                    "property": P,
-                    "predicted": "{:.2%}".format(prediction.iloc[0][P])
-                    } )
+            if present:
+                predicted = prediction.sort_values(by=prediction.index[0] , axis=1, ascending=False).iloc[:,0:n+len(prediction.columns.intersection(existing))]
+            else:
+                predicted = prediction[(prediction.columns.difference(existing))].sort_values(by=prediction.index[0] , axis=1, ascending=False).iloc[:,0:n]
+
+            show = predicted[predicted > 0.1]
+            for P in show:
+                if show.iloc[0][P] > 0:
+                    pres = P in existing
+                    response['missing_properties'].append( {
+                        "property": P,
+                        "present": pres,
+                        "predicted": "{:.2%}".format(show.iloc[0][P])
+                        } )
+
         else:
             return render_template("index.html", content=response, error='Entity not found in index.'), 404
     else:
